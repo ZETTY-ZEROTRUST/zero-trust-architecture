@@ -1,0 +1,14 @@
+region         = "ap-northeast-2"
+env            = "dev"
+project_prefix = "ZETI"
+
+az_a = "ap-northeast-2a"
+az_b = "ap-northeast-2b"
+
+vpc_cidr = "10.0.0.0/16"
+
+domain_name   = "zeti.example.com"
+admin_ip_cidr = "116.127.149.219/32"
+
+# 시크릿 — 실제 사용 시 terraform.tfvars (gitignored) 에 넣거나 TF_VAR_ 환경변수.
+rds_master_password = "CHANGE_ME_strong_password_here"
