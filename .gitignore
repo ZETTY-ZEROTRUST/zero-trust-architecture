@@ -1,0 +1,27 @@
+# Terraform state — 평문 + 시크릿 포함 가능. 절대 커밋 금지.
+**/*.tfstate
+**/*.tfstate.*
+**/*.tfstate.backup
+
+# Local Terraform 작업 디렉토리
+**/.terraform/
+**/.terraform.tfstate.lock.info
+
+# 변수 파일 — 시크릿/계정ID 포함 가능
+*.tfvars
+*.tfvars.json
+!terraform.tfvars.example
+
+# Plan 출력
+*.tfplan
+crash.log
+crash.*.log
+
+# OS / 에디터
+.DS_Store
+*.swp
+*.swo
+.idea/
+.vscode/
+
+# 주의: .terraform.lock.hcl 은 커밋함 (provider 버전 고정)

@@ -1,0 +1,19 @@
+# <type>(<scope>): <subject>
+#
+# ─────────────────────────────────────────────
+# Type:   feat | fix | refactor | docs | style | test | chore | perf | ci | revert
+# Scope:  vpc | sg | alb | waf | route53 | ec2 | rds | kms | root | docs | repo | ci
+# Subject: 한글, 50자 이내, 마침표 없이, 명령형 (예: "WAFv2 rate limit 룰 추가")
+# ─────────────────────────────────────────────
+#
+# Body (선택, 한 줄 72자 이내):
+# - "왜" 변경했는지 중심
+# - 코드 변경 나열보다 의도/배경 설명
+#
+#
+# ─────────────────────────────────────────────
+# Footer (선택):
+# - Closes #N           : 머지 시 이슈 자동 종료
+# - Refs #N             : 관련 이슈 참조
+# - BREAKING CHANGE:    : state migration 필요 / 다른 레포 영향
+# ─────────────────────────────────────────────
