@@ -98,7 +98,7 @@ ZT 의 핵심 원칙인 **defense in depth** — 한 layer 가 뚫려도 다음 
 
 | OSI Layer | 대표 위협 | ZETI 방어 컴포넌트 | Terraform 모듈 |
 |----|-----|-----|-----|
-| **L7 Application** | SQLi · XSS · CSRF · 알려진 nasty payload · IDOR 자동화 · JWT 위조 · 봇 트래픽 | **WAFv2 Managed Rules** 3종 (CommonRuleSet · KnownBadInputs · SQLi) + **Nginx PEP** path 필터 + **JWT KMS ES256 검증** + **UBA 행위 분석** (LSID 추적 · 7개월 저속 유출 탐지) | `waf` · `kms` · (UBA 자체는 `uba-analyzer` 레포) |
+| **L7 Application** | SQLi · XSS · CSRF · 알려진 nasty payload · JWT 위조 · 탈취 token 재사용 · 봇 트래픽 | **WAFv2 Managed Rules** 3종 (CommonRuleSet · KnownBadInputs · SQLi) + **Nginx PEP** path 필터 + **JWT KMS ES256 검증** + **자기 자원 인가** + **UBA 행위 분석** (LSID 추적 · 7개월 저속 유출 탐지) | `waf` · `kms` · (UBA 자체는 `uba-analyzer` 레포) |
 | **L6 Presentation** | TLS downgrade · weak cipher · MITM · 키 평문 노출 | **ACM cert** (DNS validation) + **ALB ssl_policy `ELBSecurityPolicy-TLS13-1-2-2021-06`** + **JWT ES256 비대칭** (서명키 KMS HSM 안에서만 사용) | `route53` · `alb` · `kms` |
 | **L5 Session** | 세션 탈취 · 동일 세션 다중 IP abuse · 토큰 재사용 | **JWT TTL 600s** (단명 토큰) + **`ext.LSID` 세션 추적자** + **UBA 동일 LSID + 복수 IP 탐지** | `kms` (서명) + UBA |
 | **L4 Transport** | 포트 스캐닝 · 백엔드 직접 접근 · 자동화 폭주 | **Security Group 체인** (SG ID 참조, port 화이트리스트) + **WAF rate-based rule** (IP 당 5분 윈도우 2000req → BLOCK) | `security_groups` · `waf` |
@@ -254,4 +254,4 @@ terraform {
 ## 📜 컨벤션
 
 - Commit message: [COMMIT_CONVENTION.md](./COMMIT_CONVENTION.md) (한글 subject + scope 명시)
-- 의도된 보안 취약점 명시: 본 인프라는 의도적으로 4 종 취약점 (IDOR · door_password 평문 · MOCK OTP · 하드코딩 키) 을 시연 자산으로 유지. "보안 강화" 임의 패치 금지.
+- 실험 자산 경계: 순차 `sub`, `door_password` 응답, MOCK OTP와 문서화된 키 유출 재현 자산은 유지하되, 자원 API의 소유권 검사는 모든 profile에서 적용.

@@ -72,12 +72,12 @@ ZETTY는 모노레포 + 멀티 컴포넌트 구조라 **scope를 거의 항상 �
 ### 좋은 예
 
 ```
-feat(api): IDOR 취약 엔드포인트 GET /addresses/{userId} 추가
+feat(api): JWT sub 기반 자기 주소 조회 추가
 fix(api): KMS 공개키 캐싱 시 kid 매칭 오류 수정
 refactor(uba): 리스크 스코어링 팩터 분리
 chore(api): Spring Boot 3.4.0 프로젝트 골격 생성
 docs(infra): README에 EC2 접속 방법 추가
-test(api): 주문 조회 IDOR 시나리오 테스트 추가
+test(api): 주문 상세 소유권 검증 테스트 추가
 ```
 
 ### 나쁜 예
@@ -106,7 +106,7 @@ feat(api): KMS 공개키 기반 JWT 검증 필터 추가
 쿠팡 사고 재현을 위해 ES256 서명 검증 로직을 도입.
 부팅 시 KMS GetPublicKey로 공개키 가져와 메모리 캐싱하며,
 키 회전 대비 kid 기반 Map<String, ECPublicKey> 구조로 관리.
-인가(authorization)는 의도적으로 생략하여 IDOR 시연 가능 상태로 둠.
+자원 조회는 JWT sub와 repository 소유권 query로 제한함.
 ```
 
 ---
@@ -148,8 +148,8 @@ feat(api): User/Address/Order 엔티티 정의
 feat(db): 더미 사용자/주소 데이터 schema.sql, data.sql 추가
 feat(api): KMS 공개키 캐싱 컴포넌트 구현
 feat(api): JWT 검증 필터 구현
-feat(api): IDOR 취약 엔드포인트 추가
-test(api): IDOR 시연 통합 테스트 추가
+feat(api): 자기 자원 엔드포인트 추가
+test(api): 객체 소유권 통합 테스트 추가
 docs(api): README에 실행/시연 방법 작성
 ci(api): GitHub Actions 빌드 워크플로우 추가
 ```
