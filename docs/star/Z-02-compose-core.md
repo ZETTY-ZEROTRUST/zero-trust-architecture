@@ -1,6 +1,6 @@
 # Z-02 Compose core: 네트워크 분리·자원 상한·기동 순서
 
-- 상태: 계획
+- 상태: 완료(core)
 - 연결: Jira A-01 · 부하 실험 L-1~L-3의 실행 기반
 - 작성/갱신: 2026-09-26
 
@@ -49,6 +49,16 @@
 
 ## R — 개선 결과
 
-미측정.
+| 지표 | 결과 | 근거 |
+|---|---|---|
+| `compose config -q` | 통과 | — |
+| `up --wait` 전 서비스 healthy | 통과 | kms/mysql/redis/auth/api/nginx |
+| host 노출 포트 | 127.0.0.1:8443(nginx)만 | compose ports |
+| MySQL 앱 계정 | auth_app/api_app 최소권한 분리 | init SQL |
+
+### 시행착오
+- MySQL `.sh` init이 bind mount 권한으로 exec 실패 → env 치환이 필요해 gen-secrets가 `.secrets/mysql-init/*.sql`을 렌더링하도록 변경.
+- actuator가 Spring Security로 403 → management 경로를 permitAll(별도 9090 포트, 미노출).
+- 앱 이미지 readiness 그룹 미노출 → healthcheck를 `/actuator/health`로 변경.
 
 ## 자소서 한 줄 (R 확정 후)

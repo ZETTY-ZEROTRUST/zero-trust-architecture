@@ -1,6 +1,6 @@
 # Z-01 로컬 KMS 에뮬레이터로 AWS 의존 제거
 
-- 상태: 계획
+- 상태: 완료
 - 연결: Jira A-01 · 부하 실험 L-5 · backend `docs/star/B-01`
 - 작성/갱신: 2026-09-26
 
@@ -57,8 +57,11 @@
 
 | 지표 | 전 | 후 | 조건 |
 |---|---|---|---|
-| AWS 없이 core 기동 | 불가 | ? | 새 volume, `up --wait` |
-| 기동~ready 시간 | — | ? | 3회 중앙값 |
-| KMS 네트워크 접근 가능 앱 수 | — | 1 목표 | `docker network inspect` |
+| AWS 없이 core 기동 | 불가(기동 시 AWS KMS 호출) | 성공 | `up --wait` 전부 healthy |
+| 로그인→RS256 발급→API 검증 | — | 성공 | JWKS alg RS256, 개인키 미노출, 변조 서명 401 |
+| KMS 네트워크 접근 앱 | — | auth만 | compose networks 분리 |
+
+- seed.yaml은 RSA PrivateKeyPem을 요구해 실패했다(로그 확인). 개인키를 Git에 두지 않으려 **kms-init 컨테이너가 런타임에 CreateKey+CreateAlias**로 멱등 생성하도록 바꿨다.
+- 검증: `openssl dgst -sha256 -verify`로 KMS 서명이 공개키로 검증됨을 gate에서 확인했고, 서비스 경로에서도 변조 서명이 401로 거부됐다.
 
 ## 자소서 한 줄 (R 확정 후)
