@@ -21,6 +21,8 @@ GRANT PROCESS, REPLICATION CLIENT, SELECT ON *.* TO 'exporter'@'%';
 -- 직무 분리: auth는 인증 테이블(users), api는 업무 테이블만 DML. 서로의 원본을 쓰지 않는다.
 GRANT SELECT, INSERT, UPDATE, DELETE ON zeti_db.users TO 'auth_app'@'%';
 GRANT SELECT, INSERT, UPDATE, DELETE ON zeti_db.refresh_tokens TO 'auth_app'@'%';
+GRANT SELECT, INSERT, UPDATE, DELETE ON zeti_db.token_ledger TO 'auth_app'@'%';
+GRANT SELECT ON zeti_db.token_ledger TO 'api_app'@'%';
 GRANT SELECT ON zeti_db.users TO 'api_app'@'%';
 GRANT SELECT, INSERT, UPDATE, DELETE ON zeti_db.addresses TO 'api_app'@'%';
 GRANT SELECT, INSERT, UPDATE, DELETE ON zeti_db.orders TO 'api_app'@'%';
