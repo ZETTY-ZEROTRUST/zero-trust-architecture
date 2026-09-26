@@ -99,6 +99,8 @@ services:
       DB_USERNAME: api_app
       DB_PASSWORD: ${API_DB_PASSWORD}
       ZETTY_JWKS_URI: http://auth:8080/.well-known/jwks.json
+      DB_POOL_MAX: ${DB_POOL_MAX:-10}
+      DB_CONN_TIMEOUT_MS: ${DB_CONN_TIMEOUT_MS:-5000}
     networks: [application, data]
     depends_on:
       mysql: { condition: service_healthy }
