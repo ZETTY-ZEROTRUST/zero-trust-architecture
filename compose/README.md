@@ -25,3 +25,10 @@ curl -sk $B/users/me -H "Authorization: Bearer <token>"
 ```
 
 측정·부하·시나리오 절차는 `../docs/star/`의 사이클 기록을 따른다.
+
+## observability (부하 측정용)
+
+```sh
+docker compose --env-file .secrets/env --profile observability up -d --wait
+# Prometheus UI: http://127.0.0.1:9091 (auth·api·cadvisor·mysqld scrape)
+```

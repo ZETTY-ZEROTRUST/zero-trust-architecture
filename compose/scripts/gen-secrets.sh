@@ -7,6 +7,7 @@ if [ -f .secrets/env ]; then echo ".secrets/env 이미 존재"; exit 0; fi
 rnd(){ LC_ALL=C tr -dc 'A-Za-z0-9' </dev/urandom | head -c 24; }
 cat > .secrets/env <<INNER
 MYSQL_ROOT_PASSWORD=$(rnd)
+EXPORTER_PASSWORD=$(rnd)
 AUTH_DB_PASSWORD=$(rnd)
 API_DB_PASSWORD=$(rnd)
 INNER
@@ -15,11 +16,13 @@ mkdir -p .secrets/mysql-init
 cat > .secrets/mysql-init/01-accounts.sql <<INNER
 CREATE USER IF NOT EXISTS 'auth_app'@'%' IDENTIFIED BY '${AUTH_DB_PASSWORD}';
 CREATE USER IF NOT EXISTS 'api_app'@'%'  IDENTIFIED BY '${API_DB_PASSWORD}';
+CREATE USER IF NOT EXISTS 'exporter'@'%' IDENTIFIED BY '${EXPORTER_PASSWORD}' WITH MAX_USER_CONNECTIONS 3;
 GRANT SELECT, INSERT, UPDATE, DELETE ON zeti_db.* TO 'auth_app'@'%';
 GRANT SELECT ON zeti_db.* TO 'api_app'@'%';
+GRANT PROCESS, REPLICATION CLIENT, SELECT ON *.* TO 'exporter'@'%';
 FLUSH PRIVILEGES;
 INNER
 BACKEND="${BACKEND_PATH:-../../backend}"
-cp "$BACKEND/api-server/src/main/resources/schema.sql" .secrets/mysql-init/02-schema.sql
-cp "$BACKEND/api-server/src/main/resources/data.sql" .secrets/mysql-init/03-data.sql
+{ echo "USE zeti_db;"; cat "$BACKEND/api-server/src/main/resources/schema.sql"; } > .secrets/mysql-init/02-schema.sql
+{ echo "USE zeti_db;"; cat "$BACKEND/api-server/src/main/resources/data.sql"; } > .secrets/mysql-init/03-data.sql
 echo ".secrets/env 및 mysql-init(계정+스키마+시드) 생성 완료"
