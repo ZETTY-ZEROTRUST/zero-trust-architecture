@@ -13,13 +13,19 @@ API_DB_PASSWORD=$(rnd)
 INNER
 mkdir -p .secrets/mysql-init
 . .secrets/env
-cat > .secrets/mysql-init/01-accounts.sql <<INNER
+cat > .secrets/mysql-init/05-accounts.sql <<INNER
 CREATE USER IF NOT EXISTS 'auth_app'@'%' IDENTIFIED BY '${AUTH_DB_PASSWORD}';
 CREATE USER IF NOT EXISTS 'api_app'@'%'  IDENTIFIED BY '${API_DB_PASSWORD}';
 CREATE USER IF NOT EXISTS 'exporter'@'%' IDENTIFIED BY '${EXPORTER_PASSWORD}' WITH MAX_USER_CONNECTIONS 3;
-GRANT SELECT, INSERT, UPDATE, DELETE ON zeti_db.* TO 'auth_app'@'%';
-GRANT SELECT ON zeti_db.* TO 'api_app'@'%';
 GRANT PROCESS, REPLICATION CLIENT, SELECT ON *.* TO 'exporter'@'%';
+-- 직무 분리: auth는 인증 테이블(users), api는 업무 테이블만 DML. 서로의 원본을 쓰지 않는다.
+GRANT SELECT, INSERT, UPDATE, DELETE ON zeti_db.users TO 'auth_app'@'%';
+GRANT SELECT ON zeti_db.users TO 'api_app'@'%';
+GRANT SELECT, INSERT, UPDATE, DELETE ON zeti_db.addresses TO 'api_app'@'%';
+GRANT SELECT, INSERT, UPDATE, DELETE ON zeti_db.orders TO 'api_app'@'%';
+GRANT SELECT, INSERT, UPDATE, DELETE ON zeti_db.order_items TO 'api_app'@'%';
+GRANT SELECT, INSERT, UPDATE, DELETE ON zeti_db.payments TO 'api_app'@'%';
+GRANT SELECT, INSERT, UPDATE, DELETE ON zeti_db.payment_history TO 'api_app'@'%';
 FLUSH PRIVILEGES;
 INNER
 BACKEND="${BACKEND_PATH:-../../backend}"
