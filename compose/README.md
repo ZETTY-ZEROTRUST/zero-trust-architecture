@@ -38,3 +38,4 @@ docker compose --env-file .secrets/env --profile observability up -d --wait
 - api: https://127.0.0.1:8443/swagger-ui.html
 - auth: https://127.0.0.1:8443/auth/swagger-ui.html
 - `SWAGGER_ENABLED`(Compose 기본 true). 운영 배포에서는 false로 둔다.
+- 사용법·도입 이유: backend `docs/swagger-guide.md`
