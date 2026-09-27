@@ -48,9 +48,8 @@ ZETTY는 모노레포 + 멀티 컴포넌트 구조라 **scope를 거의 항상 �
 | `api` | API Server (주문/주소 등) |
 | `infra` | Terraform, AWS 인프라 설정 |
 | `nginx` | Nginx PEP 설정/커스텀 로깅 |
-| `uba` | UBA 분석 로직, 리스크 스코어링 |
-| `pipeline` | 로그 파이프라인 |
-| `llm` | LLM 추론 모듈 |
+| `pipeline` | 보안 이벤트 파이프라인 · 이상 탐지(log-pipeline) |
+| `llm` | LLM 추론/보고 모듈 |
 | `dashboard` | 시각화 대시보드 |
 | `kms` | KMS 키 관리 |
 | `db` | DB 스키마/마이그레이션 |
@@ -74,7 +73,7 @@ ZETTY는 모노레포 + 멀티 컴포넌트 구조라 **scope를 거의 항상 �
 ```
 feat(api): JWT sub 기반 자기 주소 조회 추가
 fix(api): KMS 공개키 캐싱 시 kid 매칭 오류 수정
-refactor(uba): 리스크 스코어링 팩터 분리
+refactor(pipeline): 이상 탐지 피처 분리
 chore(api): Spring Boot 3.4.0 프로젝트 골격 생성
 docs(infra): README에 EC2 접속 방법 추가
 test(api): 주문 상세 소유권 검증 테스트 추가
@@ -177,7 +176,7 @@ git config --local commit.template .gitmessage
 #
 # ─────────────────────────────────────────────
 # Type:    feat | fix | refactor | docs | style | test | chore | perf | ci | revert
-# Scope:   auth | api | infra | nginx | uba | pipeline | llm | dashboard | kms | db | ci | docs
+# Scope:   auth | api | infra | nginx | pipeline | llm | dashboard | kms | db | ci | docs
 # Subject: 50자 이내, 마침표 없이, 명령형 (예: "JWT 검증 필터 추가")
 # ─────────────────────────────────────────────
 #
