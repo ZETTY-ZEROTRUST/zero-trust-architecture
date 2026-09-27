@@ -104,6 +104,12 @@ services:
       DB_CONN_TIMEOUT_MS: ${DB_CONN_TIMEOUT_MS:-5000}
       REDIS_HOST: ${REDIS_HOST:-redis-session}
       ZETTY_AUTHSTATE_CACHE_TTL_SECONDS: ${AUTH_CACHE_TTL:-30}
+      ZETTY_MYPAGE_CACHE_ENABLED: ${MYPAGE_CACHE:-false}
+      ZETTY_MYPAGE_CACHE_TTL_SECONDS: ${MYPAGE_CACHE_TTL:-60}
+      JAVA_OPTS: ${API_JAVA_OPTS:--XX:MaxRAMPercentage=75}
+      TOMCAT_MAX_CONNECTIONS: ${TOMCAT_MAX_CONNECTIONS:-8192}
+      TOMCAT_ACCEPT_COUNT: ${TOMCAT_ACCEPT_COUNT:-100}
+      TOMCAT_THREADS_MAX: ${TOMCAT_THREADS_MAX:-200}
     networks: [application, data]
     depends_on:
       mysql: { condition: service_healthy }
