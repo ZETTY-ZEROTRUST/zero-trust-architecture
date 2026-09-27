@@ -142,6 +142,7 @@ services:
       API_BASE_URL: http://api:8081
       BFF_ALLOWED_ORIGIN: https://127.0.0.1:8443
       TOMCAT_MAX_CONNECTIONS: ${TOMCAT_MAX_CONNECTIONS:-400}
+      SWAGGER_ENABLED: ${SWAGGER_ENABLED:-true}
     networks: [application, data]
     depends_on:
       mysql: { condition: service_healthy }
