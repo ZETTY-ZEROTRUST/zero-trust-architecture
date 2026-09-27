@@ -127,6 +127,36 @@ services:
         limits: { cpus: "2", memory: 768M }
 
 
+  # BFF: 브라우저는 세션 쿠키만 받고 AT/RT는 BFF의 암호화 vault(MySQL)에만 둔다.
+  bff:
+    build:
+      context: ${BACKEND_PATH:-../../backend}/bff-server
+      dockerfile: Dockerfile
+    environment:
+      DB_URL: jdbc:mysql://mysql:3306/zeti_db
+      DB_USERNAME: bff_app
+      DB_PASSWORD: ${BFF_DB_PASSWORD}
+      BFF_VAULT_KEY: ${BFF_VAULT_KEY}
+      REDIS_HOST: ${REDIS_HOST:-redis-session}
+      AUTH_BASE_URL: http://auth:8080
+      API_BASE_URL: http://api:8081
+      BFF_ALLOWED_ORIGIN: https://127.0.0.1:8443
+      TOMCAT_MAX_CONNECTIONS: ${TOMCAT_MAX_CONNECTIONS:-400}
+    networks: [application, data]
+    depends_on:
+      mysql: { condition: service_healthy }
+      redis-session: { condition: service_healthy }
+      auth: { condition: service_healthy }
+      api: { condition: service_healthy }
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:9090/actuator/health"]
+      interval: 5s
+      timeout: 3s
+      retries: 40
+    deploy:
+      resources:
+        limits: { cpus: "2", memory: 768M }
+
   # S3 lab: 공격자가 KMS Sign 권한을 얻은 상황 재현(대장 미기록 위조 토큰 발급).
   # profiles:[lab]로 기본 기동에서 제외. 127.0.0.1에만 노출, 별도 프로필로만 실행.
   auth-lab:
@@ -159,6 +189,7 @@ services:
     depends_on:
       auth: { condition: service_healthy }
       api: { condition: service_healthy }
+      bff: { condition: service_healthy }
     deploy:
       resources:
         limits: { cpus: "1", memory: 128M }
