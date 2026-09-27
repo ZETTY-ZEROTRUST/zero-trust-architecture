@@ -24,6 +24,8 @@ GRANT SELECT, INSERT, UPDATE, DELETE ON zeti_db.refresh_tokens TO 'auth_app'@'%'
 GRANT SELECT, INSERT, UPDATE, DELETE ON zeti_db.token_ledger TO 'auth_app'@'%';
 GRANT SELECT ON zeti_db.token_ledger TO 'api_app'@'%';
 GRANT SELECT ON zeti_db.users TO 'api_app'@'%';
+-- 프로필 수정(PUT /users/me)용 컬럼 단위 권한. 비밀번호 해시·auth_version·email은 쓰지 못한다.
+GRANT UPDATE (name, phone) ON zeti_db.users TO 'api_app'@'%';
 GRANT SELECT, INSERT, UPDATE, DELETE ON zeti_db.addresses TO 'api_app'@'%';
 GRANT SELECT, INSERT, UPDATE, DELETE ON zeti_db.orders TO 'api_app'@'%';
 GRANT SELECT, INSERT, UPDATE, DELETE ON zeti_db.order_items TO 'api_app'@'%';
