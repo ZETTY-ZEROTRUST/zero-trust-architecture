@@ -38,6 +38,9 @@ GRANT PROCESS, REPLICATION CLIENT, SELECT ON *.* TO 'exporter'@'%';
 GRANT SELECT, INSERT, UPDATE, DELETE ON zeti_db.users TO 'auth_app'@'%';
 GRANT SELECT, INSERT, UPDATE, DELETE ON zeti_db.refresh_tokens TO 'auth_app'@'%';
 GRANT SELECT, INSERT, UPDATE, DELETE ON zeti_db.token_ledger TO 'auth_app'@'%';
+-- 대응 명령 집행(I-04): 집행 측(auth)만 가명 역매핑과 명령 로그에 접근한다. api/bff는 접근 없음.
+GRANT SELECT, INSERT, UPDATE, DELETE ON zeti_db.actor_identity_map TO 'auth_app'@'%';
+GRANT SELECT, INSERT, UPDATE, DELETE ON zeti_db.response_command_log TO 'auth_app'@'%';
 GRANT SELECT ON zeti_db.token_ledger TO 'api_app'@'%';
 GRANT SELECT ON zeti_db.users TO 'api_app'@'%';
 -- 프로필 수정(PUT /users/me)용 컬럼 단위 권한. 비밀번호 해시·auth_version·email은 쓰지 못한다.
@@ -84,7 +87,7 @@ user default off
 user admin on #$(sha "$REDIS_EVENTS_ADMIN_PASSWORD") ~* &* +@all
 user healthcheck on nopass -@all +ping
 user zetty-relay on #$(sha "$REDIS_RELAY_PASSWORD") resetkeys resetchannels -@all +ping +client|setinfo +xadd ~zetty:security-events
-user zetty-indexer on #$(sha "$REDIS_INDEXER_PASSWORD") resetkeys resetchannels -@all +ping +client|setinfo +xreadgroup +xack +xautoclaim +xgroup|create +xpending ~zetty:security-events (+xadd ~zetty:security-events:dlq)
+user zetty-indexer on #$(sha "$REDIS_INDEXER_PASSWORD") resetkeys resetchannels -@all +ping +client|setinfo +xreadgroup +xack +xautoclaim +xgroup|create +xpending +xinfo +xtrim ~zetty:security-events (+xadd ~zetty:security-events:dlq)
 INNER
 chmod 644 .secrets/redis-events/users.acl
 echo ".secrets/env(빠진 키만 추가), mysql-init, 파이프라인 비밀 파일, redis-events ACL 갱신 완료"
