@@ -102,6 +102,9 @@ services:
       DB_USERNAME: api_app
       DB_PASSWORD: ${API_DB_PASSWORD}
       ZETTY_JWKS_URI: http://auth:8080/.well-known/jwks.json
+      VIRTUAL_THREADS: ${VIRTUAL_THREADS:-false}
+      TOMCAT_THREADS_MAX: ${TOMCAT_THREADS_MAX:-200}
+      ZETTY_DB_BULKHEAD_PERMITS: ${DB_BULKHEAD_PERMITS:-0}
       DB_POOL_MAX: ${DB_POOL_MAX:-10}
       DB_CONN_TIMEOUT_MS: ${DB_CONN_TIMEOUT_MS:-5000}
       REDIS_HOST: ${REDIS_HOST:-redis-session}
@@ -111,7 +114,6 @@ services:
       JAVA_OPTS: ${API_JAVA_OPTS:--XX:MaxRAMPercentage=75}
       TOMCAT_MAX_CONNECTIONS: ${TOMCAT_MAX_CONNECTIONS:-400}
       TOMCAT_ACCEPT_COUNT: ${TOMCAT_ACCEPT_COUNT:-100}
-      TOMCAT_THREADS_MAX: ${TOMCAT_THREADS_MAX:-200}
       # API 문서는 로컬 전용. 운영 배포에서는 false로 둔다.
       SWAGGER_ENABLED: ${SWAGGER_ENABLED:-true}
       EVENT_HMAC_KEY: ${EVENT_HMAC_KEY}
@@ -258,6 +260,7 @@ services:
       ZETTY_KMS_ENDPOINT: http://kms:8080
       ZETTY_JWT_KMS_KEY_ID: alias/zetty-jwt-signing
       SPRING_PROFILES_ACTIVE: lab
+      EVENT_HMAC_KEY: ${EVENT_HMAC_KEY}
     ports:
       - "127.0.0.1:8444:8080"
     networks: [application, data, kms]
