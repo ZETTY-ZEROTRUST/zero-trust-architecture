@@ -77,7 +77,7 @@ services:
       ZETTY_KMS_ENDPOINT: http://kms:8080
       ZETTY_KMS_REGION: ap-northeast-2
       ZETTY_JWT_KMS_KEY_ID: alias/zetty-jwt-signing
-      REDIS_HOST: redis-session
+      REDIS_HOST: ${REDIS_HOST:-redis-session}
     networks: [application, data, kms]
     depends_on:
       mysql: { condition: service_healthy }
@@ -102,7 +102,7 @@ services:
       ZETTY_JWKS_URI: http://auth:8080/.well-known/jwks.json
       DB_POOL_MAX: ${DB_POOL_MAX:-10}
       DB_CONN_TIMEOUT_MS: ${DB_CONN_TIMEOUT_MS:-5000}
-      REDIS_HOST: redis-session
+      REDIS_HOST: ${REDIS_HOST:-redis-session}
       ZETTY_AUTHSTATE_CACHE_TTL_SECONDS: ${AUTH_CACHE_TTL:-30}
     networks: [application, data]
     depends_on:
