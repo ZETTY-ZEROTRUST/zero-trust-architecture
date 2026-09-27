@@ -57,3 +57,4 @@
 | [Z-02](Z-02-compose-core.md) | Compose core: 네트워크 분리·자원 상한·기동 순서 | 완료 |
 | [Z-03](Z-03-observability.md) | 부하 측정을 위한 관측 스택 | 완료 |
 | [Z-04](Z-04-load-balancing.md) | 수평 확장·nginx 동적 LB·로그인 과부하 제한 | 진행 |
+| [Z-05](Z-05-event-pipeline-integration.md) | 보안 이벤트 파이프라인 통합(실제 요청 → ES, 유실·중복 0) | 완료 |
