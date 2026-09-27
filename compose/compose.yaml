@@ -78,6 +78,7 @@ services:
       ZETTY_KMS_REGION: ap-northeast-2
       ZETTY_JWT_KMS_KEY_ID: alias/zetty-jwt-signing
       REDIS_HOST: ${REDIS_HOST:-redis-session}
+      SWAGGER_ENABLED: ${SWAGGER_ENABLED:-true}
     networks: [application, data, kms]
     depends_on:
       mysql: { condition: service_healthy }
@@ -110,6 +111,8 @@ services:
       TOMCAT_MAX_CONNECTIONS: ${TOMCAT_MAX_CONNECTIONS:-400}
       TOMCAT_ACCEPT_COUNT: ${TOMCAT_ACCEPT_COUNT:-100}
       TOMCAT_THREADS_MAX: ${TOMCAT_THREADS_MAX:-200}
+      # API 문서는 로컬 전용. 운영 배포에서는 false로 둔다.
+      SWAGGER_ENABLED: ${SWAGGER_ENABLED:-true}
     networks: [application, data]
     depends_on:
       mysql: { condition: service_healthy }
