@@ -56,3 +56,4 @@
 | [Z-01](Z-01-local-kms.md) | 로컬 KMS 에뮬레이터로 AWS 의존 제거 | 계획 |
 | [Z-02](Z-02-compose-core.md) | Compose core: 네트워크 분리·자원 상한·기동 순서 | 계획 |
 | [Z-03](Z-03-observability.md) | 부하 측정을 위한 관측 스택 | 계획 |
+| [Z-04](Z-04-load-balancing.md) | 수평 확장·nginx 동적 LB·로그인 과부하 제한 | 진행 |
