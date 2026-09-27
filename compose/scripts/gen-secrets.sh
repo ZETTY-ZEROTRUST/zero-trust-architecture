@@ -17,6 +17,15 @@ ensure API_DB_PASSWORD "$(rnd)"
 ensure BFF_DB_PASSWORD "$(rnd)"
 # BFF 토큰 vault 암호화 키(AES-256, base64 32바이트). BFF만 받는다.
 ensure BFF_VAULT_KEY "$(openssl rand -base64 32)"
+# 보안 이벤트 가명화(HMAC) 키. auth·api producer에만 준다(같은 값). ML·파이프라인에는 주지 않는다.
+ensure EVENT_HMAC_KEY "$(openssl rand -base64 32)"
+# 이벤트 파이프라인 전용 계정(DB·Redis). 서비스별 최소 권한.
+ensure RELAY_DB_PASSWORD "$(rnd)"
+ensure INDEXER_DB_PASSWORD "$(rnd)"
+ensure OPS_DB_PASSWORD "$(rnd)"
+ensure REDIS_EVENTS_ADMIN_PASSWORD "$(rnd)"
+ensure REDIS_RELAY_PASSWORD "$(rnd)"
+ensure REDIS_INDEXER_PASSWORD "$(rnd)"
 
 . .secrets/env
 cat > .secrets/mysql-init/05-accounts.sql <<INNER
@@ -38,6 +47,19 @@ GRANT SELECT, INSERT, UPDATE, DELETE ON zeti_db.orders TO 'api_app'@'%';
 GRANT SELECT, INSERT, UPDATE, DELETE ON zeti_db.order_items TO 'api_app'@'%';
 GRANT SELECT, INSERT, UPDATE, DELETE ON zeti_db.payments TO 'api_app'@'%';
 GRANT SELECT, INSERT, UPDATE, DELETE ON zeti_db.payment_history TO 'api_app'@'%';
+-- 보안 이벤트 Outbox: producer는 INSERT만.
+GRANT INSERT ON zeti_db.security_event_outbox TO 'auth_app'@'%';
+GRANT INSERT ON zeti_db.security_event_outbox TO 'api_app'@'%';
+-- 이벤트 파이프라인(log-pipeline pipeline/sql/least-privilege-grants.sql과 동일).
+CREATE USER IF NOT EXISTS 'zetty_relay'@'%' IDENTIFIED BY '${RELAY_DB_PASSWORD}';
+CREATE USER IF NOT EXISTS 'zetty_indexer'@'%' IDENTIFIED BY '${INDEXER_DB_PASSWORD}';
+CREATE USER IF NOT EXISTS 'zetty_pipeline_ops'@'%' IDENTIFIED BY '${OPS_DB_PASSWORD}';
+GRANT SELECT ON zeti_db.security_event_outbox TO 'zetty_relay'@'%';
+GRANT UPDATE (status, lease_owner, lease_until, attempts, published_at) ON zeti_db.security_event_outbox TO 'zetty_relay'@'%';
+GRANT SELECT, INSERT ON zeti_db.security_event_receipt TO 'zetty_indexer'@'%';
+GRANT SELECT ON zeti_db.security_event_outbox TO 'zetty_pipeline_ops'@'%';
+GRANT UPDATE (status, lease_owner, lease_until) ON zeti_db.security_event_outbox TO 'zetty_pipeline_ops'@'%';
+GRANT SELECT ON zeti_db.security_event_receipt TO 'zetty_pipeline_ops'@'%';
 -- BFF는 자기 vault 테이블만 읽고 쓴다(업무·인증 테이블 권한 없음).
 GRANT SELECT, INSERT, UPDATE, DELETE ON zeti_db.bff_token_vault TO 'bff_app'@'%';
 FLUSH PRIVILEGES;
@@ -48,4 +70,21 @@ BACKEND="${BACKEND_PATH:-../../backend}"
 if [ -f "$BACKEND/bff-server/src/main/resources/bff-schema.sql" ]; then
   { echo "USE zeti_db;"; cat "$BACKEND/bff-server/src/main/resources/bff-schema.sql"; } > .secrets/mysql-init/04-bff-schema.sql
 fi
-echo ".secrets/env(빠진 키만 추가) 및 mysql-init(스키마·시드·계정) 갱신 완료"
+# 파이프라인 컨테이너는 *_FILE로 비밀번호를 읽는다(환경변수·inspect에 값이 남지 않게).
+mkdir -p .secrets/files .secrets/redis-events
+for pair in relay_db:RELAY_DB_PASSWORD indexer_db:INDEXER_DB_PASSWORD ops_db:OPS_DB_PASSWORD redis_relay:REDIS_RELAY_PASSWORD redis_indexer:REDIS_INDEXER_PASSWORD; do
+  f=${pair%%:*}; v=${pair#*:}; printf '%s' "${!v}" > ".secrets/files/$f"
+done
+# 컨테이너(uid 10001)가 읽을 수 있어야 한다. .secrets 자체는 gitignore·로컬 전용.
+chmod 644 .secrets/files/*
+sha(){ printf '%s' "$1" | shasum -a 256 | cut -d' ' -f1; }
+# redis-events ACL: 평문 대신 SHA-256만 둔다. default 사용자는 끈다.
+cat > .secrets/redis-events/users.acl <<INNER
+user default off
+user admin on #$(sha "$REDIS_EVENTS_ADMIN_PASSWORD") ~* &* +@all
+user healthcheck on nopass -@all +ping
+user zetty-relay on #$(sha "$REDIS_RELAY_PASSWORD") resetkeys resetchannels -@all +ping +client|setinfo +xadd ~zetty:security-events
+user zetty-indexer on #$(sha "$REDIS_INDEXER_PASSWORD") resetkeys resetchannels -@all +ping +client|setinfo +xreadgroup +xack +xautoclaim +xgroup|create +xpending ~zetty:security-events (+xadd ~zetty:security-events:dlq)
+INNER
+chmod 644 .secrets/redis-events/users.acl
+echo ".secrets/env(빠진 키만 추가), mysql-init, 파이프라인 비밀 파일, redis-events ACL 갱신 완료"

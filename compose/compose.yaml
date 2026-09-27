@@ -79,6 +79,7 @@ services:
       ZETTY_JWT_KMS_KEY_ID: alias/zetty-jwt-signing
       REDIS_HOST: ${REDIS_HOST:-redis-session}
       SWAGGER_ENABLED: ${SWAGGER_ENABLED:-true}
+      EVENT_HMAC_KEY: ${EVENT_HMAC_KEY}
     networks: [application, data, kms]
     depends_on:
       mysql: { condition: service_healthy }
@@ -113,6 +114,7 @@ services:
       TOMCAT_THREADS_MAX: ${TOMCAT_THREADS_MAX:-200}
       # API 문서는 로컬 전용. 운영 배포에서는 false로 둔다.
       SWAGGER_ENABLED: ${SWAGGER_ENABLED:-true}
+      EVENT_HMAC_KEY: ${EVENT_HMAC_KEY}
     networks: [application, data]
     depends_on:
       mysql: { condition: service_healthy }
@@ -157,6 +159,90 @@ services:
     deploy:
       resources:
         limits: { cpus: "2", memory: 768M }
+
+  # ---- analysis profile: 보안 이벤트 전달(Outbox → Redis Streams → ES) ----
+  redis-events:
+    image: redis:7-alpine
+    profiles: [analysis]
+    # 세션 Redis와 분리. AOF로 내구성, noeviction으로 조용한 유실 방지. ACL 사용자별 최소 권한(default 사용자 끔).
+    command: ["redis-server", "--appendonly", "yes", "--maxmemory", "256mb", "--maxmemory-policy", "noeviction", "--aclfile", "/etc/redis/users.acl"]
+    volumes:
+      - redis-events-data:/data
+      - ./.secrets/redis-events/users.acl:/etc/redis/users.acl:ro
+    networks: [analysis]
+    healthcheck:
+      test: ["CMD", "redis-cli", "--no-auth-warning", "--user", "healthcheck", "--pass", "x", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    deploy:
+      resources:
+        limits: { cpus: "0.5", memory: 384M }
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.19.14
+    profiles: [analysis]
+    environment:
+      discovery.type: single-node
+      # 로컬 전용(host 포트 미공개, analysis 네트워크만). 운영에서는 보안 기능을 켜고 indexer에 최소 권한 키를 준다.
+      xpack.security.enabled: "false"
+      ES_JAVA_OPTS: -Xms512m -Xmx512m
+    volumes:
+      - es-data:/usr/share/elasticsearch/data
+    networks: [analysis]
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fs 'http://localhost:9200/_cluster/health?wait_for_status=yellow&timeout=5s' >/dev/null"]
+      interval: 10s
+      timeout: 8s
+      retries: 30
+    deploy:
+      resources:
+        limits: { cpus: "2", memory: 1536M }
+
+  outbox-relay:
+    build:
+      context: ${LOG_PIPELINE_PATH:-../../log-pipeline}
+      dockerfile: pipeline/relay/Dockerfile
+    profiles: [analysis]
+    environment:
+      MYSQL_HOST: mysql
+      MYSQL_USER: zetty_relay
+      MYSQL_PASSWORD_FILE: /run/secrets/relay_db
+      REDIS_EVENTS_HOST: redis-events
+      REDIS_EVENTS_USERNAME: zetty-relay
+      REDIS_EVENTS_PASSWORD_FILE: /run/secrets/redis_relay
+    secrets: [relay_db, redis_relay]
+    networks: [data, analysis]
+    depends_on:
+      mysql: { condition: service_healthy }
+      redis-events: { condition: service_healthy }
+    deploy:
+      resources:
+        limits: { cpus: "0.5", memory: 256M }
+
+  event-indexer:
+    build:
+      context: ${LOG_PIPELINE_PATH:-../../log-pipeline}
+      dockerfile: pipeline/indexer/Dockerfile
+    profiles: [analysis]
+    environment:
+      MYSQL_HOST: mysql
+      MYSQL_USER: zetty_indexer
+      MYSQL_PASSWORD_FILE: /run/secrets/indexer_db
+      REDIS_EVENTS_HOST: redis-events
+      REDIS_EVENTS_USERNAME: zetty-indexer
+      REDIS_EVENTS_PASSWORD_FILE: /run/secrets/redis_indexer
+      ES_URL: http://elasticsearch:9200
+      ES_ENSURE_TEMPLATE: "true"
+    secrets: [indexer_db, redis_indexer]
+    networks: [data, analysis]
+    depends_on:
+      mysql: { condition: service_healthy }
+      redis-events: { condition: service_healthy }
+      elasticsearch: { condition: service_healthy }
+    deploy:
+      resources:
+        limits: { cpus: "0.5", memory: 256M }
 
   # S3 lab: 공격자가 KMS Sign 권한을 얻은 상황 재현(대장 미기록 위조 토큰 발급).
   # profiles:[lab]로 기본 기동에서 제외. 127.0.0.1에만 노출, 별도 프로필로만 실행.
@@ -236,7 +322,14 @@ services:
       resources:
         limits: { cpus: "0.5", memory: 128M }
 
+secrets:
+  relay_db: { file: ./.secrets/files/relay_db }
+  indexer_db: { file: ./.secrets/files/indexer_db }
+  redis_relay: { file: ./.secrets/files/redis_relay }
+  redis_indexer: { file: ./.secrets/files/redis_indexer }
+
 networks:
+  analysis: {}
   edge: {}
   application: {}
   data: {}
@@ -245,3 +338,5 @@ networks:
 volumes:
   mysql-data: {}
   kms-data: {}
+  redis-events-data: {}
+  es-data: {}
