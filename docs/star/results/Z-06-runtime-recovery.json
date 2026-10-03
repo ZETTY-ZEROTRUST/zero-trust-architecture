@@ -1,0 +1,163 @@
+{
+  "version": 1,
+  "recovered": {
+    "nginx": {
+      "container_id": "3791059215c08efc88f8adc217878147f005c7ca8f2598b6f304676541fbeecf",
+      "status": "running",
+      "exit_code": 0,
+      "health": null,
+      "mounts": [
+        {
+          "type": "bind",
+          "source": "/Users/jjyj2302/zetty/zero-trust-architecture/compose/nginx/nginx.conf",
+          "destination": "/etc/nginx/nginx.conf",
+          "volume": null
+        },
+        {
+          "type": "bind",
+          "source": "/Users/jjyj2302/zetty/zero-trust-architecture/compose/tls",
+          "destination": "/etc/nginx/tls",
+          "volume": null
+        }
+      ]
+    },
+    "redis-events": {
+      "container_id": "48adebba7ab54738d985821fd59218297b80f8c89093660ec0c1b2f31ef6fad9",
+      "status": "running",
+      "exit_code": 0,
+      "health": "healthy",
+      "mounts": [
+        {
+          "type": "volume",
+          "source": "/var/lib/docker/volumes/zetty_redis-events-data/_data",
+          "destination": "/data",
+          "volume": "zetty_redis-events-data"
+        },
+        {
+          "type": "bind",
+          "source": "/Users/jjyj2302/zetty/zero-trust-architecture/compose/.secrets/redis-events/users.acl",
+          "destination": "/etc/redis/users.acl",
+          "volume": null
+        }
+      ]
+    },
+    "outbox-relay": {
+      "container_id": "78998fa9765fc1ee4ef42189e2193c67d7094d3faadb1c274e1215612c41ff89",
+      "status": "running",
+      "exit_code": 0,
+      "health": "starting",
+      "mounts": [
+        {
+          "type": "bind",
+          "source": "/Users/jjyj2302/zetty/zero-trust-architecture/compose/.secrets/files/relay_db",
+          "destination": "/run/secrets/relay_db",
+          "volume": null
+        },
+        {
+          "type": "bind",
+          "source": "/Users/jjyj2302/zetty/zero-trust-architecture/compose/.secrets/files/redis_relay",
+          "destination": "/run/secrets/redis_relay",
+          "volume": null
+        }
+      ]
+    },
+    "event-indexer": {
+      "container_id": "5594591542b684dc4cc983127483c02001f9c26fab5f4cc093c78ebbec6a5ca2",
+      "status": "running",
+      "exit_code": 0,
+      "health": "starting",
+      "mounts": [
+        {
+          "type": "bind",
+          "source": "/Users/jjyj2302/zetty/zero-trust-architecture/compose/.secrets/files/indexer_db",
+          "destination": "/run/secrets/indexer_db",
+          "volume": null
+        },
+        {
+          "type": "bind",
+          "source": "/Users/jjyj2302/zetty/zero-trust-architecture/compose/.secrets/files/redis_indexer",
+          "destination": "/run/secrets/redis_indexer",
+          "volume": null
+        }
+      ]
+    },
+    "prometheus": {
+      "container_id": "5435e19d51d92de20cd7ea4f55a86010d312112ecc4164f2d8bbce3527339f1d",
+      "status": "running",
+      "exit_code": 0,
+      "health": null,
+      "mounts": [
+        {
+          "type": "volume",
+          "source": "/var/lib/docker/volumes/fc965fa7fc697705a23b175ff361c2e98e563594e497f31de2a4e9d5d2b24873/_data",
+          "destination": "/prometheus",
+          "volume": "fc965fa7fc697705a23b175ff361c2e98e563594e497f31de2a4e9d5d2b24873"
+        },
+        {
+          "type": "bind",
+          "source": "/host_mnt/Users/jjyj2302/zetty/zero-trust-architecture/compose/observability/prometheus.yml",
+          "destination": "/etc/prometheus/prometheus.yml",
+          "volume": null
+        }
+      ]
+    },
+    "mysqld-exporter": {
+      "container_id": "d333f0a5b9b79f4cc5e522ddf60b655b7883c13e9c097b1f87d7abda82cf5167",
+      "status": "running",
+      "exit_code": 0,
+      "health": null,
+      "mounts": []
+    }
+  },
+  "core_preserved": {
+    "auth": {
+      "same_container": true,
+      "status": "running",
+      "health": "healthy"
+    },
+    "api": {
+      "same_container": true,
+      "status": "running",
+      "health": "healthy"
+    },
+    "bff": {
+      "same_container": true,
+      "status": "running",
+      "health": "healthy"
+    },
+    "mysql": {
+      "same_container": true,
+      "status": "running",
+      "health": "healthy"
+    },
+    "kms": {
+      "same_container": true,
+      "status": "running",
+      "health": "healthy"
+    },
+    "redis-session": {
+      "same_container": true,
+      "status": "running",
+      "health": "healthy"
+    },
+    "elasticsearch": {
+      "same_container": true,
+      "status": "running",
+      "health": "healthy"
+    },
+    "cadvisor": {
+      "same_container": true,
+      "status": "running",
+      "health": "healthy"
+    }
+  },
+  "https_statuses": {
+    "/users/me": "401",
+    "/.well-known/jwks.json": "200"
+  },
+  "mysql_up": true,
+  "tls": "local CA validated by curl; key material excluded",
+  "secrets": "new dedicated service credentials in .secrets; core env not exported",
+  "expected_completed_job": "kms-init exit 0",
+  "remaining": "Original core .secrets/env is absent; use recovery.env only for the listed services"
+}
