@@ -58,5 +58,5 @@ python3 scripts/recover-services.py
 
 ## Containers and TLS
 
-- [Service roles and flow](../../docs/CURRENT_ARCHITECTURE.md)
-- [Certificate, private key and bind path](../../docs/LOCAL_TLS.md)
+- [Auth, API and BFF roles](../../backend/README.md)
+- [Local certificate generation](scripts/gen-tls.sh)
