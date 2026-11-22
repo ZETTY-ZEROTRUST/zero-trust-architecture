@@ -2,7 +2,7 @@
 
 AWS 없이 인증 기반을 기동한다. backend 저장소를 형제 디렉터리로 checkout한 상태를 전제한다.
 
-## 기동
+## 최초 새 환경 기동
 
 ```sh
 cd compose
@@ -18,10 +18,11 @@ docker compose --env-file .secrets/env up -d --build --wait
 ## smoke
 
 ```sh
-B=https://127.0.0.1:8443
-curl -sk -X POST $B/auth/login -H 'Content-Type: application/json' \
-  -d '{"email":"...","password":"..."}'   # accessToken(RS256)
-curl -sk $B/users/me -H "Authorization: Bearer <token>"
+curl --cacert tls/ca.crt --output /dev/null --write-out '%{http_code}\n' \
+  https://127.0.0.1:8443/.well-known/jwks.json
+curl --cacert tls/ca.crt --output /dev/null --write-out '%{http_code}\n' \
+  https://127.0.0.1:8443/users/me
+# Expected: JWKS 200, protected API without authentication 401
 ```
 
 측정·부하·시나리오 절차는 `../docs/star/`의 사이클 기록을 따른다.
@@ -40,3 +41,22 @@ docker compose --env-file .secrets/env --profile observability up -d --wait
 - bff(브라우저 진입점): https://127.0.0.1:8443/bff/swagger-ui.html
 - `SWAGGER_ENABLED`(Compose 기본 true). 운영 배포에서는 false로 둔다.
 - 사용법·도입 이유: backend `docs/swagger-guide.md`
+
+## worktree 이동 후 선택 서비스 복구
+
+기존 컨테이너는 생성 당시의 절대 bind 경로를 유지한다. 파일 경로 이동은 현재 Compose로 재생성해야 반영된다.
+
+```sh
+python3 scripts/recover-services.py
+```
+
+이 helper는 현재 compose 경로의 로컬 TLS와 분석/관측 전용 runtime 파일을 준비하고 nginx·Redis events·relay·indexer·Prometheus·exporter만 재생성한다. 전용 relay/indexer/exporter DB 접속 정보만 일치시키며 기존 core 컨테이너와 데이터 볼륨은 유지한다.
+
+`.secrets/recovery.env`는 exporter 설정만 포함하며 원본 `.secrets/env`의 대체물이 아니다. 원본 환경 파일이 유실된 기존 DB에서는 `gen-secrets.sh`로 새 값을 만들어 core 전체를 재생성하면 DB 비밀번호·vault·HMAC 설정이 어긋날 수 있다. core 전체 재생성 전에 해당 설정을 별도로 맞춰야 한다.
+
+실측 기록: [Z-06](../docs/star/Z-06-compose-bind-path-repair.md).
+
+## Containers and TLS
+
+- [Auth, API and BFF roles](../../backend/README.md)
+- [Local certificate generation](scripts/gen-tls.sh)
